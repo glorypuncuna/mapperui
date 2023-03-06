@@ -4,6 +4,7 @@ import 'package:flutter/src/widgets/placeholder.dart';
 
 final _messageController = TextEditingController();
 final _headerLengthController = TextEditingController();
+final _outputController = TextEditingController();
 final _formKey = GlobalKey<FormState>();
 String _mode = "1";
 
@@ -37,29 +38,58 @@ class _ParserPageState extends State<ParserPage> {
               ),
               Container(
                 margin: const EdgeInsets.only(
-                    left: 150, top: 10, right: 150, bottom: 10),
+                    left: 50, top: 10, right: 50, bottom: 10),
                 padding: const EdgeInsets.only(
-                    left: 0, top: 10, right: 0, bottom: 20),
+                    left: 50, top: 10, right: 10, bottom: 20),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(20.0),
                   color: Colors.white,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
                   children: [
-                    Row(
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        textHeaderForField("Enter your ISO8583 message"),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            textHeaderForField("Enter your ISO8583 message"),
+                          ],
+                        ),
+                        formMessage(),
+                        const TileRad(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            submitButton(),
+                            const SizedBox(
+                              width: 40,
+                            ),
+                            clearButton()
+                          ],
+                        )
                       ],
                     ),
-                    formMessage(),
-                    const TileRad(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [submitButton(), clearButton()],
+                    Container(
+                      margin: const EdgeInsets.only(
+                          left: 30, top: 10, right: 10, bottom: 10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          textHeaderForField("Output"),
+                          SizedBox(
+                            width: 400,
+                            child: textField(
+                                'Output will be shown here',
+                                'Output',
+                                20,
+                                TextInputType.multiline,
+                                _outputController),
+                          ),
+                        ],
+                      ),
                     )
                   ],
                 ),
