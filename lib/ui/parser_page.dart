@@ -6,7 +6,9 @@ final _messageController = TextEditingController();
 final _headerLengthController = TextEditingController();
 final _outputController = TextEditingController();
 final _formKey = GlobalKey<FormState>();
-String _mode = "1";
+ModeType _mode = ModeType.satu;
+
+enum ModeType { satu, dua, tiga }
 
 class ParserPage extends StatefulWidget {
   const ParserPage({super.key});
@@ -60,15 +62,18 @@ class _ParserPageState extends State<ParserPage> {
                         ),
                         formMessage(),
                         const TileRad(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            submitButton(),
-                            const SizedBox(
-                              width: 40,
-                            ),
-                            clearButton()
-                          ],
+                        Container(
+                          margin: const EdgeInsets.all(10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              submitButton(),
+                              const SizedBox(
+                                width: 40,
+                              ),
+                              clearButton()
+                            ],
+                          ),
                         )
                       ],
                     ),
@@ -174,57 +179,51 @@ class _TileRadState extends State<TileRad> {
         ),
         SizedBox(
           width: 600,
-          child: ListTile(
+          child: RadioListTile<ModeType>(
             dense: true,
             title: const Text(
               '1 - With plain text (Whitespace counts!)',
               style: TextStyle(fontFamily: "VT323", fontSize: 15),
             ),
-            leading: Radio(
-              value: "satu",
-              groupValue: _mode,
-              onChanged: (value) {
-                setState(() {
-                  _mode = value as String;
-                });
-              },
-            ),
+            value: ModeType.satu,
+            groupValue: _mode,
+            onChanged: (value) {
+              setState(() {
+                _mode = value!;
+              });
+            },
           ),
         ),
         SizedBox(
           width: 600,
-          child: ListTile(
+          child: RadioListTile<ModeType>(
             dense: true,
             title: const Text(
                 '2 - Hex except for the bitmap (Will delete whitespace)',
                 style: TextStyle(fontFamily: "VT323", fontSize: 15)),
-            leading: Radio(
-              value: "dua",
-              groupValue: _mode,
-              onChanged: (value) {
-                setState(() {
-                  _mode = value as String;
-                });
-              },
-            ),
+            value: ModeType.dua,
+            groupValue: _mode,
+            onChanged: (value) {
+              setState(() {
+                _mode = value!;
+              });
+            },
           ),
         ),
         SizedBox(
           width: 600,
-          child: ListTile(
+          child: RadioListTile<ModeType>(
             dense: true,
             title: const Text(
                 '3 - Hex only when the alpha exist in the data type (Will delete whitespace)',
                 style: TextStyle(fontFamily: "VT323", fontSize: 15)),
-            leading: Radio(
-              value: "tiga",
-              groupValue: _mode,
-              onChanged: (value) {
-                setState(() {
-                  _mode = value as String;
-                });
-              },
-            ),
+            value: ModeType.tiga,
+            groupValue: _mode,
+            onChanged: (value) {
+              setState(() {
+                _mode = value!;
+              });
+            },
           ),
         ),
       ],
