@@ -6,6 +6,8 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:mapperui/models/message.dart';
 
+import '../models/res.dart';
+
 final _messageController = TextEditingController();
 final _headerLengthController = TextEditingController();
 final _outputController = TextEditingController();
@@ -15,6 +17,8 @@ final _formKey = GlobalKey<FormState>();
 // bool _validateMode = false;
 ModeType _mode = ModeType.satu;
 final dio = Dio();
+double size = 400;
+double size2 = 600;
 
 enum ModeType { satu, dua, tiga }
 
@@ -93,7 +97,7 @@ class _ParserPageState extends State<ParserPage> {
                         children: [
                           textHeaderForField("Output"),
                           SizedBox(
-                            width: 400,
+                            width: size2,
                             child: SingleChildScrollView(
                               child: textField(
                                 'Output will be shown here',
@@ -131,7 +135,7 @@ Widget textHeaderForField(String field) {
 Widget formMessage() {
   return Flexible(
     child: SizedBox(
-      width: 600,
+      width: size,
       child: Form(
         key: _formKey,
         child: Column(
@@ -195,7 +199,7 @@ class _TileRadState extends State<TileRad> {
           ],
         ),
         SizedBox(
-          width: 600,
+          width: size,
           child: RadioListTile<ModeType>(
             dense: true,
             title: const Text(
@@ -212,7 +216,7 @@ class _TileRadState extends State<TileRad> {
           ),
         ),
         SizedBox(
-          width: 600,
+          width: size,
           child: RadioListTile<ModeType>(
             dense: true,
             title: const Text(
@@ -228,7 +232,7 @@ class _TileRadState extends State<TileRad> {
           ),
         ),
         SizedBox(
-          width: 600,
+          width: size,
           child: RadioListTile<ModeType>(
             dense: true,
             title: const Text(
@@ -289,7 +293,49 @@ Widget clearButton() {
 void request(String url, String data) async {
   Response response;
   response = await dio.post(url, data: data);
-  _outputController.text = response.data.toString();
+  // _outputController.text = response.toString();
+  Map<String, dynamic> resMap = jsonDecode(response.toString());
+  var res = Res.fromJson(resMap);
+  String tpdu = res.data.header.toString();
+  String mti = res.data.mti.toString();
+  String bitmap = res.data.bitmap.bit;
+  String print = "TPDU      : " +
+      tpdu +
+      "\nMTI       : " +
+      mti +
+      "\nP-BITMAP  : " +
+      bitmap;
+
+  int lenDe = res.data.dataElement.length;
+  for (int i = 0; i < lenDe; i++) {
+    String fieldPrint = "";
+    if (res.data.dataElement[i].id < 10) {
+      fieldPrint = "\nFIELD  ${res.data.dataElement[i].id}  : ";
+    } else {
+      fieldPrint = "\nFIELD ${res.data.dataElement[i].id}  : ";
+    }
+
+    int length = 4 + res.data.dataElement[i].length;
+    if (res.data.dataElement[i].length > 99) {
+      length + 2;
+    } else if (res.data.dataElement[i].length > 9) {
+      length + 1;
+    }
+    int space = 5;
+    if (length < 40) {
+      space = 40 - length;
+    }
+    fieldPrint +=
+        "(${res.data.dataElement[i].length}) ${res.data.dataElement[i].value}";
+
+    for (int j = 0; j < space; j++) {
+      fieldPrint += " ";
+    }
+
+    print += fieldPrint;
+  }
+
+  _outputController.text = print;
 }
 
 @override
