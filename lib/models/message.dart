@@ -1,9 +1,8 @@
-class MessageISO8583 {
-  String messageDe;
+class ISOInput {
+  String iso;
   int mode;
   int lengthHeader;
-  MessageISO8583(
-      {required this.messageDe,
-      required this.mode,
-      required this.lengthHeader});
+  ISOInput({required this.iso, required this.mode, required this.lengthHeader});
+
+  Map toJson() => {"iso": iso, "mode": mode, "lengthHeader": lengthHeader};
 }

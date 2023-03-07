@@ -1,12 +1,20 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:mapperui/models/message.dart';
 
 final _messageController = TextEditingController();
 final _headerLengthController = TextEditingController();
 final _outputController = TextEditingController();
 final _formKey = GlobalKey<FormState>();
+// bool _validateMess = false;
+// bool _validateLen = false;
+// bool _validateMode = false;
 ModeType _mode = ModeType.satu;
+final dio = Dio();
 
 enum ModeType { satu, dua, tiga }
 
@@ -86,12 +94,15 @@ class _ParserPageState extends State<ParserPage> {
                           textHeaderForField("Output"),
                           SizedBox(
                             width: 400,
-                            child: textField(
+                            child: SingleChildScrollView(
+                              child: textField(
                                 'Output will be shown here',
                                 'Output',
-                                20,
+                                21,
                                 TextInputType.multiline,
-                                _outputController),
+                                _outputController,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -118,26 +129,30 @@ Widget textHeaderForField(String field) {
 }
 
 Widget formMessage() {
-  return SizedBox(
-    width: 600,
-    child: Form(
-      key: _formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          textField('Enter your ISO8583 message here', 'Message', 5,
-              TextInputType.multiline, _messageController),
-          textField("Put your header length", "Header Length", 1,
-              TextInputType.number, _headerLengthController)
-        ],
+  return Flexible(
+    child: SizedBox(
+      width: 600,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            textField('Enter your ISO8583 message here', 'Message', 5,
+                TextInputType.multiline, _messageController),
+            textField("Put your header length", "Header Length", 1,
+                TextInputType.number, _headerLengthController)
+          ],
+        ),
       ),
     ),
   );
 }
 
 Widget textField(String hint, String label, int maxL, TextInputType type,
-    TextEditingController controller) {
+    TextEditingController controller,
+    {bool enable = true}) {
   return TextFormField(
+    enabled: enable,
     style: const TextStyle(color: Colors.black, fontFamily: "VT323"),
     keyboardType: type,
     maxLines: maxL,
@@ -154,6 +169,8 @@ Widget textField(String hint, String label, int maxL, TextInputType type,
       hintStyle: const TextStyle(color: Colors.black, fontFamily: "VT323"),
       labelText: label,
       labelStyle: const TextStyle(color: Colors.black, fontFamily: "VT323"),
+      // errorText: validate ? 'Value Can\'t Be Empty' : null,
+      // errorStyle: const TextStyle(color: Colors.red, fontFamily: "VT323"),
     ),
   );
 }
@@ -234,7 +251,23 @@ class _TileRadState extends State<TileRad> {
 Widget submitButton() {
   return ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
-      onPressed: () {},
+      onPressed: () {
+        int modeType;
+        if (_mode == ModeType.satu) {
+          modeType = 1;
+        } else if (_mode == ModeType.dua) {
+          modeType = 2;
+        } else {
+          modeType = 3;
+        }
+        ISOInput input = ISOInput(
+            iso: _messageController.text,
+            mode: modeType,
+            lengthHeader: int.parse(_headerLengthController.text));
+        String data = jsonEncode(input);
+        String url = "http://localhost:8080/v1/iso/mode3/";
+        request(url, data);
+      },
       child: const Text(
         "Parse",
         style: TextStyle(fontFamily: "VT323"),
@@ -243,10 +276,26 @@ Widget submitButton() {
 
 Widget clearButton() {
   return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        dispose();
+      },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
       child: const Text(
         "Clear All",
         style: TextStyle(fontFamily: "VT323"),
       ));
+}
+
+void request(String url, String data) async {
+  Response response;
+  response = await dio.post(url, data: data);
+  _outputController.text = response.data.toString();
+}
+
+@override
+void dispose() {
+  // Clean up the controller when the widget is disposed.
+  _messageController.text = "";
+  _headerLengthController.text = "";
+  _outputController.text = "";
 }
