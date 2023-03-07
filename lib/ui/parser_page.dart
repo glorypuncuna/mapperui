@@ -6,6 +6,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:mapperui/models/message.dart';
 
+import '../models/field.dart';
 import '../models/res.dart';
 
 final _messageController = TextEditingController();
@@ -270,6 +271,11 @@ Widget submitButton() {
             lengthHeader: int.parse(_headerLengthController.text));
         String data = jsonEncode(input);
         String url = "http://localhost:8080/v1/iso/mode3/";
+        if (modeType == 2) {
+          url = "http://localhost:8080/v1/iso/mode2/";
+        } else if (modeType == 1) {
+          url = "http://localhost:8080/v1/iso/mode1/";
+        }
         request(url, data);
       },
       child: const Text(
@@ -303,11 +309,20 @@ void request(String url, String data) async {
       tpdu +
       "\nMTI       : " +
       mti +
+      "\n            ISO Version     : " +
+      res.data.mtiMess.isoVersion +
+      "\n            Message Class   : " +
+      res.data.mtiMess.messageClass +
+      "\n            Message Function: " +
+      res.data.mtiMess.messageFunction +
+      "\n            Message Origin  : " +
+      res.data.mtiMess.messageOrigin +
       "\nP-BITMAP  : " +
       bitmap;
 
   int lenDe = res.data.dataElement.length;
   for (int i = 0; i < lenDe; i++) {
+    int lengthVal = res.data.dataElement[i].value.length;
     String fieldPrint = "";
     if (res.data.dataElement[i].id < 10) {
       fieldPrint = "\nFIELD  ${res.data.dataElement[i].id}  : ";
@@ -315,24 +330,39 @@ void request(String url, String data) async {
       fieldPrint = "\nFIELD ${res.data.dataElement[i].id}  : ";
     }
 
-    int length = 4 + res.data.dataElement[i].length;
-    if (res.data.dataElement[i].length > 99) {
-      length + 2;
-    } else if (res.data.dataElement[i].length > 9) {
-      length + 1;
+    int length = 4 + res.data.dataElement[i].value.length;
+    if (lengthVal > 99) {
+      length += 2;
+    } else if (lengthVal > 9) {
+      length += 1;
     }
-    int space = 5;
-    if (length < 40) {
-      space = 40 - length;
+    int space = 0;
+    if (length < 35) {
+      space = 35 - length;
     }
-    fieldPrint +=
-        "(${res.data.dataElement[i].length}) ${res.data.dataElement[i].value}";
+
+    String values = res.data.dataElement[i].value;
+    Map<int, int> customSpec = getSpec();
+    if (customSpec.containsKey(res.data.dataElement[i].id)) {
+      values = spec(res, i);
+    }
+
+    Map<int, int> mapper = getMap();
+    if (!mapper.containsKey(res.data.dataElement[i].id)) {
+      fieldPrint += values;
+      space += res.data.dataElement[i].length.toString().length + 3;
+    } else {
+      fieldPrint += "($lengthVal) ${values}";
+    }
 
     for (int j = 0; j < space; j++) {
       fieldPrint += " ";
     }
+    if (space == 0) {
+      fieldPrint += "\n";
+    }
 
-    print += fieldPrint;
+    print += "$fieldPrint(${res.data.dataElement[i].label})";
   }
 
   _outputController.text = print;
@@ -344,4 +374,164 @@ void dispose() {
   _messageController.text = "";
   _headerLengthController.text = "";
   _outputController.text = "";
+}
+
+Map<int, int> getMap() {
+  var newMap = {
+    2: 0,
+    32: 0,
+    33: 0,
+    34: 0,
+    35: 0,
+    36: 0,
+    44: 0,
+    45: 0,
+    46: 0,
+    47: 0,
+    48: 0,
+    54: 0,
+    55: 0,
+    56: 0,
+    57: 0,
+    58: 0,
+    59: 0,
+    60: 0,
+    61: 0,
+    62: 0,
+    63: 0,
+    99: 0,
+    100: 0,
+    101: 0,
+    102: 0,
+    103: 0,
+    104: 0,
+    105: 0,
+    106: 0,
+    107: 0,
+    108: 0,
+    109: 0,
+    110: 0,
+    111: 0,
+    112: 0,
+    113: 0,
+    114: 0,
+    115: 0,
+    116: 0,
+    117: 0,
+    118: 0,
+    119: 0,
+    120: 0,
+    121: 0,
+    122: 0,
+    123: 0,
+    124: 0,
+    125: 0,
+    126: 0,
+    127: 0
+  };
+
+  return newMap;
+}
+
+Map<int, int> getSpec() {
+  var newMap = {4: 0, 59: 0};
+  return newMap;
+}
+
+String spec(Res res, int i) {
+  String result = "";
+  Field field = res.data.dataElement[i];
+  if (field.id == 4) {
+    int money = int.parse(field.value);
+    return "RP $money,00";
+  }
+  if (field.id == 59) {
+    String mti = res.data.mti;
+    String data = res.data.dataElement[i].value;
+    final splitted = data.split('-');
+    if (mti == "0200") {
+      for (int j = 0; j < splitted.length; j++) {
+        switch (j) {
+          case 0:
+            result += "\n            EDC Type              : " + splitted[j];
+            break;
+          case 1:
+            result += "\n            Software Name         : " + splitted[j];
+            break;
+          case 2:
+            result +=
+                "\n                  TRN Struk Customer    : " + splitted[j];
+            break;
+          case 3:
+            result +=
+                "\n                  TRN Struk Merchant    : " + splitted[j];
+            break;
+          case 4:
+            result +=
+                "\n                  Serial Number         : " + splitted[j];
+            break;
+          case 5:
+            result +=
+                "\n                  Memory                : " + splitted[j];
+            break;
+          case 6:
+            result +=
+                "\n                  Version ID            : " + splitted[j];
+            break;
+          case 7:
+            result +=
+                "\n                  Original Trans Date   : " + splitted[j];
+            break;
+          case 8:
+            result +=
+                "\n                  Original Trans Time   : " + splitted[j];
+            break;
+          case 9:
+            result +=
+                "\n                  Trace Number          : " + splitted[j];
+            break;
+          case 10:
+            result += "\n            Tran Duration         : " + splitted[j];
+            break;
+          case 11:
+            result +=
+                "\n                  Dial Type             : " + splitted[j];
+            break;
+          case 12:
+            result +=
+                "\n                  Dial Success Count    : " + splitted[j];
+            break;
+          case 13:
+            result +=
+                "\n                  Dial Total Count      : " + splitted[j];
+            break;
+          case 14:
+            result +=
+                "\n                  Total Approve         : " + splitted[j];
+            break;
+          case 15:
+            result +=
+                "\n                  Total Decline         : " + splitted[j];
+            break;
+        }
+      }
+    }
+    if (mti == "0210") {
+      for (int j = 0; j < splitted.length; j++) {
+        switch (j) {
+          case 0:
+            result += "\n            Batch Number          : " + splitted[j];
+            break;
+          case 1:
+            result += "\n            Year                  : " + splitted[j];
+            break;
+          case 2:
+            result +=
+                "\n                  Reserve               : " + splitted[j];
+            break;
+        }
+      }
+    }
+  }
+  return result;
 }
