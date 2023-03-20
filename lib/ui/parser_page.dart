@@ -33,90 +33,96 @@ class _ParserPageState extends State<ParserPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-          color: Colors.black54,
-          padding: const EdgeInsets.all(20.0),
-          child: SafeArea(
-              child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                margin: const EdgeInsets.all(20.0),
-                child: const Text(
-                  "ISO8583 Parser",
-                  style: TextStyle(
-                      fontFamily: 'VT323',
-                      fontSize: 40,
+      body: SingleChildScrollView(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Container(
+              color: Colors.black54,
+              padding: const EdgeInsets.all(20.0),
+              child: SafeArea(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.all(20.0),
+                    child: const Text(
+                      "ISO8583 Parser",
+                      style: TextStyle(
+                          fontFamily: 'VT323',
+                          fontSize: 40,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w400),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                        left: 50, top: 10, right: 50, bottom: 10),
+                    padding: const EdgeInsets.only(
+                        left: 50, top: 10, right: 10, bottom: 20),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(20.0),
                       color: Colors.white,
-                      fontWeight: FontWeight.w400),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(
-                    left: 50, top: 10, right: 50, bottom: 10),
-                padding: const EdgeInsets.only(
-                    left: 50, top: 10, right: 10, bottom: 20),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(20.0),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
+                    ),
+                    child: Row(
                       children: [
-                        Row(
+                        Column(
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            textHeaderForField("Enter your ISO8583 message"),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                textHeaderForField(
+                                    "Enter your ISO8583 message"),
+                              ],
+                            ),
+                            formMessage(),
+                            const TileRad(),
+                            Container(
+                              margin: const EdgeInsets.all(10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  submitButton(),
+                                  const SizedBox(
+                                    width: 40,
+                                  ),
+                                  clearButton()
+                                ],
+                              ),
+                            )
                           ],
                         ),
-                        formMessage(),
-                        const TileRad(),
                         Container(
-                          margin: const EdgeInsets.all(10),
-                          child: Row(
+                          margin: const EdgeInsets.only(
+                              left: 30, top: 10, right: 10, bottom: 10),
+                          child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              submitButton(),
-                              const SizedBox(
-                                width: 40,
+                              textHeaderForField("Output"),
+                              SizedBox(
+                                width: size2,
+                                child: SingleChildScrollView(
+                                  child: textField(
+                                    'Output will be shown here',
+                                    'Output',
+                                    21,
+                                    TextInputType.multiline,
+                                    _outputController,
+                                  ),
+                                ),
                               ),
-                              clearButton()
                             ],
                           ),
                         )
                       ],
                     ),
-                    Container(
-                      margin: const EdgeInsets.only(
-                          left: 30, top: 10, right: 10, bottom: 10),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          textHeaderForField("Output"),
-                          SizedBox(
-                            width: size2,
-                            child: SingleChildScrollView(
-                              child: textField(
-                                'Output will be shown here',
-                                'Output',
-                                21,
-                                TextInputType.multiline,
-                                _outputController,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ))),
+                  ),
+                ],
+              ))),
+        ),
+      ),
     );
   }
 }
@@ -309,13 +315,13 @@ void request(String url, String data) async {
       tpdu +
       "\nMTI       : " +
       mti +
-      "\n            ISO Version     : " +
+      "\n            ISO Version            : " +
       res.data.mtiMess.isoVersion +
-      "\n            Message Class   : " +
+      "\n            Message Class          : " +
       res.data.mtiMess.messageClass +
-      "\n            Message Function: " +
+      "\n            Message Function       : " +
       res.data.mtiMess.messageFunction +
-      "\n            Message Origin  : " +
+      "\n            Message Origin         : " +
       res.data.mtiMess.messageOrigin +
       "\nP-BITMAP  : " +
       bitmap;
@@ -345,6 +351,11 @@ void request(String url, String data) async {
     Map<int, int> customSpec = getSpec();
     if (customSpec.containsKey(res.data.dataElement[i].id)) {
       values = spec(res, i);
+      // if (res.data.dataElement[i].id == 59) {
+      //   lengthVal = res.data.dataElement[i].value.length -
+      //       "-".allMatches(res.data.dataElement[i].value).length;
+      // }
+      lengthVal = (res.data.dataElement[i].length / 2) as int;
     }
 
     Map<int, int> mapper = getMap();
@@ -459,59 +470,46 @@ String spec(Res res, int i) {
             result += "\n            Software Name         : " + splitted[j];
             break;
           case 2:
-            result +=
-                "\n                  TRN Struk Customer    : " + splitted[j];
+            result += "\n            TRN Struk Customer    : " + splitted[j];
             break;
           case 3:
-            result +=
-                "\n                  TRN Struk Merchant    : " + splitted[j];
+            result += "\n            TRN Struk Merchant    : " + splitted[j];
             break;
           case 4:
-            result +=
-                "\n                  Serial Number         : " + splitted[j];
+            result += "\n            Serial Number         : " + splitted[j];
             break;
           case 5:
-            result +=
-                "\n                  Memory                : " + splitted[j];
+            result += "\n            Memory                : " + splitted[j];
             break;
           case 6:
-            result +=
-                "\n                  Version ID            : " + splitted[j];
+            result += "\n            Version ID            : " + splitted[j];
             break;
           case 7:
-            result +=
-                "\n                  Original Trans Date   : " + splitted[j];
+            result += "\n            Original Trans Date   : " + splitted[j];
             break;
           case 8:
-            result +=
-                "\n                  Original Trans Time   : " + splitted[j];
+            result += "\n            Original Trans Time   : " + splitted[j];
             break;
           case 9:
-            result +=
-                "\n                  Trace Number          : " + splitted[j];
+            result += "\n            Trace Number          : " + splitted[j];
             break;
           case 10:
             result += "\n            Tran Duration         : " + splitted[j];
             break;
           case 11:
-            result +=
-                "\n                  Dial Type             : " + splitted[j];
+            result += "\n            Dial Type             : " + splitted[j];
             break;
           case 12:
-            result +=
-                "\n                  Dial Success Count    : " + splitted[j];
+            result += "\n            Dial Success Count    : " + splitted[j];
             break;
           case 13:
-            result +=
-                "\n                  Dial Total Count      : " + splitted[j];
+            result += "\n            Dial Total Count      : " + splitted[j];
             break;
           case 14:
-            result +=
-                "\n                  Total Approve         : " + splitted[j];
+            result += "\n            Total Approve         : " + splitted[j];
             break;
           case 15:
-            result +=
-                "\n                  Total Decline         : " + splitted[j];
+            result += "\n            Total Decline         : " + splitted[j];
             break;
         }
       }
@@ -520,14 +518,13 @@ String spec(Res res, int i) {
       for (int j = 0; j < splitted.length; j++) {
         switch (j) {
           case 0:
-            result += "\n            Batch Number          : " + splitted[j];
+            result += "\n            Batch Number        : " + splitted[j];
             break;
           case 1:
-            result += "\n            Year                  : " + splitted[j];
+            result += "\n            Year                : " + splitted[j];
             break;
           case 2:
-            result +=
-                "\n                  Reserve               : " + splitted[j];
+            result += "\n            Reserve             : " + splitted[j];
             break;
         }
       }
